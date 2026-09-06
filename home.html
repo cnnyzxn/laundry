@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laundry</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        pagi: {
+                            cream: '#F9F8F6',
+                            green: '#3C5A3E',
+                            dark: '#1C2C1D',
+                            beige: '#E8E3D9',
+                            light: '#F4F1EB'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        serif: ['"Playfair Display"', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Hapus script React & UMD bawaan dari head, karena kita akan import langsung via module di bawah -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        html { scroll-behavior: smooth; }
+        body { margin: 0; padding: 0; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel" data-type="module">
+        // 1. Ubah import menggunakan CDN esm.sh
+        import React, { useState, useEffect, useRef } from 'https://esm.sh/react@18';
+        import { createRoot } from 'https://esm.sh/react-dom@18/client';
+        import { 
+          Menu, X, MessageCircle, ChevronRight, Leaf, Baby, Sparkles, 
+          Droplets, Truck, Clock, CheckCircle2, Star, MapPin, Instagram 
+        } from 'https://esm.sh/lucide-react@0.294.0';
+
+// --- CONFIG & UTILS ---
+const WA_NUMBER = "62895410809251";
+
+const generateWALink = (message) => {
+  return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(message)}`;
+};
+
+const defaultWAMessage = "Hallo Pagi Laundry, saya ingin pesan layanan. Bisa dibantu?";
+const regulerWAMessage = "Hallo Pagi Laundry, saya ingin memesan layanan Reguler. Bisa dibantu untuk proses pemesanannya?";
+const ekspresWAMessage = "Hallo Pagi Laundry, saya ingin memesan layanan Ekspres. Bisa dibantu untuk proses pemesanannya?";
+const satuanWAMessage = "Hallo Pagi Laundry, saya ingin menanyakan layanan Satuan. Bisa dibantu untuk info harga dan prosesnya?";
+
+// Custom Hook for Scroll Animation
+const useScrollFade = () => {
+  const domRef = useRef();
+  const [isVisible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.unobserve(domRef.current);
+        }
+      });
+    }, { threshold: 0.1 });
+
+    const currentRef = domRef.current;
+    if (currentRef) observer.observe(currentRef);
+
+    return () => {
+      if (currentRef) observer.unobserve(currentRef);
+    };
+  }, []);
+
+  return [domRef, isVisible];
+};
+
+const FadeIn = ({ children, delay = 0, className = "" }) => {
+  const [ref, isVisible] = useScrollFade();
+  return (
+    <div
+      ref={ref}
+      className={`transition-all duration-1000 ease-out ${
+        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+      } ${className}`}
+      style={{ transitionDelay: `${delay}ms` }}
+    >
+      {children}
+    </div>
+  );
+};
+
+// --- COMPONENTS ---
+
+const Navbar = () => {
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const navLinks = [
+    { name: 'Layanan', href: '#layanan' },
+    { name: 'Harga', href: '#harga' },
+    { name: 'Tentang Kami', href: '#tentang' },
+  ];
+
+  return (
+    <nav className={`fixed w-full z-50 transition-all duration-300 ${
+      isScrolled ? 'bg-white/90 backdrop-blur-md shadow-sm py-4' : 'bg-transparent py-6'
+    }`}>
+      <div className="max-w-7xl mx-auto px-6 md:px-12 flex justify-between items-center">
+        {/* Logo */}
+        <a href="#" className="text-2xl font-serif font-bold text-pagi-dark tracking-wide flex items-center gap-2">
+          <Leaf className="w-6 h-6 text-pagi-green" />
+          LAUNDRY NIH BOSS
+        </a>
+
+        {/* Desktop Nav */}
+        <div className="hidden md:flex items-center gap-8">
+          {navLinks.map((link) => (
+            <a key={link.name} href={link.href} className="text-gray-600 hover:text-pagi-green font-medium transition-colors">
+              {link.name}
+            </a>
+          ))}
+          <a 
+            href={generateWALink(defaultWAMessage)}
+            target="_blank"
+            rel="noreferrer"
+            className="bg-pagi-green text-white px-6 py-2.5 rounded-full font-medium hover:bg-pagi-dark transition-all flex items-center gap-2 shadow-sm"
+          >
+            Pesan via WhatsApp
+          </a>
+        </div>
+
+        {/* Mobile Menu Toggle */}
+        <button 
+          className="md:hidden text-pagi-dark"
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        >
+          {isMobileMenuOpen ? <X className="w-7 h-7" /> : <Menu className="w-7 h-7" />}
+        </button>
+      </div>
+
+      {/* Mobile Menu Dropdown */}
+      <div className={`md:hidden absolute top-full left-0 w-full bg-white shadow-lg transition-all duration-300 overflow-hidden ${
+        isMobileMenuOpen ? 'max-h-96 border-t border-gray-100' : 'max-h-0'
+      }`}>
+        <div className="flex flex-col px-6 py-4 gap-4">
+          {navLinks.map((link) => (
+            <a 
+              key={link.name} 
+              href={link.href} 
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="text-gray-700 font-medium py-2 border-b border-gray-50"
+            >
+              {link.name}
+            </a>
+          ))}
+          <a 
+            href={generateWALink(defaultWAMessage)}
+            target="_blank"
+            rel="noreferrer"
+            className="bg-pagi-green text-white text-center px-6 py-3 rounded-xl font-medium mt-2 flex items-center justify-center gap-2"
+          >
+            <MessageCircle className="w-5 h-5" />
+            Pesan via WhatsApp
+          </a>
+        </div>
+      </div>
+    </nav>
+  );
+};
+
+const FloatingWhatsApp = () => {
+  return (
+    <a
+      href={generateWALink(defaultWAMessage)}
+      target="_blank"
+      rel="noreferrer"
+      className="fixed bottom-6 right-6 z-50 bg-[#25D366] text-white p-4 rounded-full shadow-lg hover:scale-110 hover:shadow-xl transition-all duration-300 group flex items-center gap-0 overflow-hidden"
+    >
+      <MessageCircle className="w-6 h-6" />
+      <span className="max-w-0 overflow-hidden whitespace-nowrap group-hover:max-w-xs group-hover:ml-3 transition-all duration-500 ease-in-out font-medium">
+        Chat Kami
+      </span>
+    </a>
+  );
+};
+
+const App = () => {
+  return (
+    <div className="bg-pagi-cream text-gray-800 font-sans overflow-x-hidden selection:bg-pagi-green selection:text-white">
+      <Navbar />
+
+      {/* HERO SECTION */}
+      <section className="relative min-h-screen flex items-center pt-24 pb-16 overflow-hidden">
+        {/* Background Image & Overlay */}
+        <div className="absolute inset-0 z-0">
+          <img 
+            src="https://bospengering.id/wp-content/uploads/2025/08/thumbnailBlogKingLaundry.webp" 
+            alt="Linen putih premium" 
+            className="w-full h-full object-cover object-center"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-pagi-cream via-pagi-cream/90 to-transparent"></div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-10 w-full flex flex-col md:flex-row items-center gap-12">
+          <div className="w-full md:w-3/5">
+
+            <FadeIn delay={100}>
+              <h1 className="font-serif text-5xl md:text-7xl font-bold text-pagi-dark leading-[1.1] mb-6">
+                Bersih sejak pagi,<br />
+                <span className="text-pagi-green italic">lembut sepanjang hari.</span>
+              </h1>
+            </FadeIn>
+
+            <FadeIn delay={200}>
+              <p className="text-lg md:text-xl text-gray-600 mb-10 max-w-lg leading-relaxed">
+                Deterjen berbasis pohon yang merawat kain dengan lembut - tanpa bahan kimia keras, tanpa kompromi pada kualitas.
+              </p>
+            </FadeIn>
+
+            <FadeIn delay={300} className="flex flex-col sm:flex-row gap-4 mb-12">
+              <a 
+                href={generateWALink(defaultWAMessage)}
+                target="_blank"
+                rel="noreferrer"
+                className="bg-pagi-green text-white px-8 py-4 rounded-full font-medium hover:bg-pagi-dark transition-all text-center flex items-center justify-center gap-2 shadow-lg shadow-pagi-green/20"
+              >
+                <MessageCircle className="w-5 h-5" />
+                Pesan via WhatsApp
+              </a>
+              <a 
+                href="#layanan"
+                className="bg-white text-pagi-dark px-8 py-4 rounded-full font-medium hover:bg-gray-50 transition-all text-center flex items-center justify-center gap-2 border border-gray-200"
+              >
+                Lihat Layanan <ChevronRight className="w-4 h-4" />
+              </a>
+            </FadeIn>
+
+            <FadeIn delay={400}>
+              <p className="text-sm text-gray-500 font-medium mb-2">Melayani area:</p>
+              <p className="text-sm text-gray-600">Rawabanteng · Rawabanteng · Rawabanteng · Rawabanteng · Rawabanteng</p>
+            </FadeIn>
+          </div>
+        </div>
+
+        {/* Scroll Indicator */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-60 animate-bounce">
+          <div className="w-[1px] h-12 bg-pagi-dark"></div>
+        </div>
+      </section>
+
+      {/* AMAN UNTUK KELUARGA SECTION */}
+      <section id="tentang" className="py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-6 md:px-12">
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <FadeIn>
+              <h2 className="font-serif text-3xl md:text-5xl font-bold text-pagi-dark mb-6">Lembut untuk si kecil, <br/>aman untuk semua.</h2>
+              <p className="text-gray-600 text-lg">Dari sprei bayi hingga seragam sekolah - kami menggunakan deterjen berbasis pohon yang lembut untuk kain dan nyaman untuk keluarga.</p>
+            </FadeIn>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            <FadeIn delay={0}>
+              <div className="bg-pagi-light rounded-3xl p-8 h-full border border-pagi-beige/50 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 group">
+                <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center mb-6 text-pagi-green shadow-sm group-hover:scale-110 transition-transform">
+                  <Leaf className="w-7 h-7" />
+                </div>
+                <h3 className="font-serif text-2xl font-bold text-pagi-dark mb-3">Plant-Based</h3>
+                <p className="text-gray-600">Formula berbasis saponin alami dari tumbuhan yang lembut pada kain.</p>
+              </div>
+            </FadeIn>
+            <FadeIn delay={150}>
+              <div className="bg-pagi-light rounded-3xl p-8 h-full border border-pagi-beige/50 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 group">
+                <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center mb-6 text-pagi-green shadow-sm group-hover:scale-110 transition-transform">
+                  <Baby className="w-7 h-7" />
+                </div>
+                <h3 className="font-serif text-2xl font-bold text-pagi-dark mb-3">Hypoallergenic</h3>
+                <p className="text-gray-600">Sangat lembut dan aman untuk kulit sensitif serta pakaian harian keluarga.</p>
+              </div>
+            </FadeIn>
+            <FadeIn delay={300}>
+              <div className="bg-pagi-light rounded-3xl p-8 h-full border border-pagi-beige/50 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 group">
+                <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center mb-6 text-pagi-green shadow-sm group-hover:scale-110 transition-transform">
+                  <Sparkles className="w-7 h-7" />
+                </div>
+                <h3 className="font-serif text-2xl font-bold text-pagi-dark mb-3">Extra Soft</h3>
+                <p className="text-gray-600">Kain terasa lebih lembut, nyaman, dan harum natural setelah setiap pencucian.</p>
+              </div>
+            </FadeIn>
+          </div>
+          
+          <FadeIn delay={400} className="text-center mt-12">
+            <a 
+              href={generateWALink("Halo Pagi Laundry, saya ingin bertanya lebih lanjut mengenai bahan deterjen yang digunakan.")}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 text-pagi-green font-semibold hover:text-pagi-dark transition-colors"
+            >
+              Tanya Lebih Lanjut <ChevronRight className="w-4 h-4" />
+            </a>
+          </FadeIn>
+        </div>
+      </section>
+
+      {/* MENGAPA PAGI SECTION */}
+      <section id="layanan" className="py-24 bg-pagi-cream">
+        <div className="max-w-7xl mx-auto px-6 md:px-12">
+          <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
+            <FadeIn className="max-w-xl">
+              <h2 className="font-serif text-3xl md:text-5xl font-bold text-pagi-dark mb-6">Berbeda dari laundry biasa.</h2>
+              <p className="text-gray-600 text-lg">Kami tidak hanya mencuci pakaian. Kami merawat setiap kain agar tetap bersih, nyaman, dan terjaga kualitasnya untuk waktu yang lama.</p>
+            </FadeIn>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              { icon: Leaf, title: "Deterjen Berbasis Pohon", desc: "Saponin alami dari ekstrak tumbuhan untuk membersihkan pakaian dengan lembut." },
+              { icon: Sparkles, title: "Hasil Extra Soft", desc: "Tekstur kain terasa lebih lembut dan nyaman setelah dicuci." },
+              { icon: Droplets, title: "Ramah Lingkungan", desc: "Formula yang lebih ramah lingkungan dan biodegradable, baik untuk bumi." },
+              { icon: Truck, title: "Gratis Antar Jemput", desc: "Kami jemput dan antar kembali pakaianmu tanpa biaya tambahan di area layanan." },
+              { icon: Clock, title: "Selesai Tepat Waktu", desc: "Reguler selesai dalam 2 hari, ekspres tersedia untuk kebutuhan mendesak." },
+              { icon: Baby, title: "Aman untuk Bayi", desc: "Bebas bahan kimia keras, lembut untuk pakaian bayi dan kebutuhan keluarga." }
+            ].map((feature, idx) => (
+              <FadeIn key={idx} delay={idx * 50}>
+                <div className="bg-white p-8 rounded-3xl shadow-sm hover:shadow-md transition-shadow h-full">
+                  <feature.icon className="w-8 h-8 text-pagi-green mb-5" />
+                  <h3 className="font-bold text-xl text-pagi-dark mb-2">{feature.title}</h3>
+                  <p className="text-gray-600 text-sm leading-relaxed">{feature.desc}</p>
+                </div>
+              </FadeIn>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CARA PESAN SECTION */}
+      <section className="py-24 bg-white overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 md:px-12">
+          <div className="text-center max-w-2xl mx-auto mb-20">
+            <FadeIn>
+              <h2 className="font-serif text-3xl md:text-5xl font-bold text-pagi-dark mb-6">Semudah itu.<br/>3 langkah, beres.</h2>
+              <p className="text-gray-600 text-lg">Pesan lewat WhatsApp, kami urus semuanya - dari jemput sampai kembali rapi di depan pintu rumahmu.</p>
+            </FadeIn>
+          </div>
+
+          <div className="relative">
+            {/* Desktop Connecting Line */}
+            <div className="hidden md:block absolute top-1/2 left-[10%] right-[10%] h-[1px] bg-gray-200 -z-10"></div>
+            
+            <div className="grid md:grid-cols-3 gap-12 md:gap-8">
+              {[
+                { step: "01", title: "Pesan & Jemput", desc: "Chat kami di WhatsApp dan tentukan waktu penjemputan yang pas untukmu." },
+                { step: "02", title: "Cuci & Lipat", desc: "Pakaian diproses dengan deterjen berbasis pohon, dikeringkan, dan dilipat rapi." },
+                { step: "03", title: "Antar ke Pintu", desc: "Pakaian bersih, harum, dan rapi kami antar kembali sesuai jadwal." }
+              ].map((item, idx) => (
+                <FadeIn key={idx} delay={idx * 150} className="relative bg-white pt-8 md:pt-0">
+                  <div className="flex flex-col items-center text-center">
+                    <div className="w-16 h-16 bg-pagi-cream rounded-full flex items-center justify-center font-serif text-2xl font-bold text-pagi-green mb-6 border-4 border-white shadow-sm">
+                      {item.step}
+                    </div>
+                    <h3 className="font-bold text-2xl text-pagi-dark mb-3">{item.title}</h3>
+                    <p className="text-gray-600">{item.desc}</p>
+                  </div>
+                </FadeIn>
+              ))}
+            </div>
+          </div>
+          
+          <FadeIn delay={400} className="text-center mt-16">
+            <a 
+              href={generateWALink(defaultWAMessage)}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 bg-pagi-dark text-white px-8 py-4 rounded-full font-medium hover:bg-pagi-green transition-all shadow-lg"
+            >
+              <MessageCircle className="w-5 h-5" />
+              Pesan Sekarang via WhatsApp
+            </a>
+          </FadeIn>
+        </div>
+      </section>
+
+      {/* HARGA SECTION */}
+      <section id="harga" className="py-24 bg-pagi-cream">
+        <div className="max-w-7xl mx-auto px-6 md:px-12">
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <FadeIn>
+              <h2 className="font-serif text-3xl md:text-5xl font-bold text-pagi-dark mb-4">Harga Transparan</h2>
+              <p className="text-gray-600 text-lg mb-4">Tidak ada biaya tersembunyi. Bayar sesuai berat atau satuan.</p>
+              <div className="inline-block bg-white px-6 py-2 rounded-full shadow-sm text-sm font-medium text-pagi-dark">
+                Mulai dari Rp12.000/kg <span className="text-gray-300 mx-2">|</span> Min. order 3 kg <span className="text-gray-300 mx-2">|</span> Gratis antar jemput
+              </div>
+            </FadeIn>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 items-center">
+            {/* REGULER */}
+            <FadeIn delay={0}>
+              <div className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition-shadow border border-gray-100">
+                <h3 className="font-bold text-xl text-gray-500 mb-2 uppercase tracking-wider text-sm">Reguler</h3>
+                <div className="font-serif text-4xl font-bold text-pagi-dark mb-6">Rp 12.000 <span className="text-base font-sans text-gray-500 font-normal">/kg</span></div>
+                
+                <ul className="space-y-4 mb-8">
+                  {["Selesai 2 hari", "Cuci + kering + lipat", "Deterjen eco", "Gratis antar jemput", "Minimum order 3 kg"].map((feature, i) => (
+                    <li key={i} className="flex items-start gap-3 text-gray-600">
+                      <CheckCircle2 className="w-5 h-5 text-pagi-green shrink-0 mt-0.5" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <a 
+                  href={generateWALink(regulerWAMessage)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block w-full py-3 px-6 text-center rounded-xl font-semibold text-pagi-green bg-pagi-light hover:bg-pagi-green hover:text-white transition-colors"
+                >
+                  Pesan via WhatsApp
+                </a>
+              </div>
+            </FadeIn>
+
+            {/* EKSPRES */}
+            <FadeIn delay={150}>
+              <div className="bg-pagi-dark rounded-3xl p-8 shadow-xl transform md:-translate-y-4 relative overflow-hidden">
+                <div className="absolute top-0 right-0 bg-pagi-green text-white text-xs font-bold px-4 py-1 rounded-bl-xl uppercase tracking-wider">
+                  Terpopuler
+                </div>
+                <h3 className="font-bold text-xl text-pagi-beige mb-2 uppercase tracking-wider text-sm">Ekspres</h3>
+                <div className="font-serif text-4xl font-bold text-white mb-6">Rp 24.000 <span className="text-base font-sans text-gray-400 font-normal">/kg</span></div>
+                
+                <ul className="space-y-4 mb-8">
+                  {["Selesai same day", "Cuci + kering + lipat", "Deterjen eco", "Gratis antar jemput", "Prioritas pengerjaan", "Minimum order 3 kg"].map((feature, i) => (
+                    <li key={i} className="flex items-start gap-3 text-gray-200">
+                      <CheckCircle2 className="w-5 h-5 text-pagi-green shrink-0 mt-0.5" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <a 
+                  href={generateWALink(ekspresWAMessage)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block w-full py-3 px-6 text-center rounded-xl font-semibold text-pagi-dark bg-white hover:bg-pagi-cream transition-colors"
+                >
+                  Pesan via WhatsApp
+                </a>
+              </div>
+            </FadeIn>
+
+            {/* SATUAN */}
+            <FadeIn delay={300}>
+              <div className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition-shadow border border-gray-100">
+                <h3 className="font-bold text-xl text-gray-500 mb-2 uppercase tracking-wider text-sm">Satuan</h3>
+                <div className="font-serif text-4xl font-bold text-pagi-dark mb-6">Rp 25.000 <span className="text-base font-sans text-gray-500 font-normal">/pcs*</span></div>
+                
+                <ul className="space-y-4 mb-8">
+                  {["Jaket, Jas, Gaun", "Karpet & Bedcover", "Perawatan khusus per item", "Estimasi 2×24 jam", "Gratis antar jemput"].map((feature, i) => (
+                    <li key={i} className="flex items-start gap-3 text-gray-600">
+                      <CheckCircle2 className="w-5 h-5 text-pagi-green shrink-0 mt-0.5" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <a 
+                  href={generateWALink(satuanWAMessage)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block w-full py-3 px-6 text-center rounded-xl font-semibold text-pagi-green bg-pagi-light hover:bg-pagi-green hover:text-white transition-colors"
+                >
+                  Tanya Harga via WA
+                </a>
+              </div>
+            </FadeIn>
+          </div>
+
+          <FadeIn className="text-center mt-10">
+            <p className="text-sm text-gray-500 italic">*Konfirmasi berat dan total biaya dilakukan melalui WhatsApp sebelum proses pencucian dimulai.</p>
+          </FadeIn>
+        </div>
+      </section>
+
+      {/* TESTIMONI SECTION */}
+      <section className="py-24 bg-pagi-light">
+        <div className="max-w-7xl mx-auto px-6 md:px-12">
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <FadeIn>
+              <h2 className="font-serif text-3xl md:text-5xl font-bold text-pagi-dark mb-4">Kata Pelanggan</h2>
+              <p className="text-gray-600 text-lg">Mereka sudah merasakan bedanya.</p>
+            </FadeIn>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              {
+                text: "Baju anak jauh lebih lembut, tidak ada bau deterjen menyengat sama sekali. Cocok banget untuk kulit sensitif si kecil.",
+                name: "Bu Anet",
+                role: "Pelanggan BSD · Sejak 2024"
+              },
+              {
+                text: "Paket ekspres same day beneran tepat waktu. Sudah langganan hampir setahun, tidak pernah terlambat sekali pun.",
+                name: "Pak Renold",
+                role: "Pelanggan Gading Serpong · Sejak 2023"
+              },
+              {
+                text: "Awalnya ragu soal harga, tapi hasilnya worth it banget. Kain lebih awet dan warna tidak cepat pudar. Wanginya natural.",
+                name: "Bu Marcella",
+                role: "Pelanggan Bintaro · Sejak 2024"
+              }
+            ].map((testi, idx) => (
+              <FadeIn key={idx} delay={idx * 150}>
+                <div className="bg-white p-8 rounded-3xl shadow-sm h-full flex flex-col">
+                  <div className="flex gap-1 mb-6 text-yellow-400">
+                    {[...Array(5)].map((_, i) => <Star key={i} className="w-5 h-5 fill-current" />)}
+                  </div>
+                  <p className="text-gray-700 leading-relaxed mb-8 flex-grow">"{testi.text}"</p>
+                  <div>
+                    <h4 className="font-bold text-pagi-dark">{testi.name}</h4>
+                    <p className="text-sm text-gray-500">{testi.role}</p>
+                  </div>
+                </div>
+              </FadeIn>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FINAL CTA SECTION */}
+      <section className="py-24 bg-pagi-green relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          {/* Subtle pattern or texture could go here */}
+        </div>
+        <div className="max-w-4xl mx-auto px-6 md:px-12 text-center relative z-10">
+          <FadeIn>
+            <h2 className="font-serif text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
+              Siap pakaianmu dicuci <br className="hidden md:block"/>dengan lebih baik?
+            </h2>
+            <p className="text-pagi-light text-xl mb-10 opacity-90">
+              Pesan sekarang.
+            </p>
+            <a 
+              href={generateWALink(defaultWAMessage)}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center justify-center gap-3 bg-white text-pagi-dark px-10 py-5 rounded-full font-bold text-lg hover:bg-pagi-cream hover:scale-105 transition-all shadow-xl"
+            >
+              <MessageCircle className="w-6 h-6 text-[#25D366]" />
+              Chat WhatsApp Sekarang
+            </a>
+            <p className="text-pagi-light/70 mt-6 text-sm">Atau simpan nomor kami: +62 895-0000-0000</p>
+          </FadeIn>
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="bg-pagi-dark text-pagi-light py-16 border-t border-pagi-green/30">
+        <div className="max-w-7xl mx-auto px-6 md:px-12">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 md:gap-8 mb-12">
+            
+            {/* Brand Column */}
+            <div className="md:col-span-1">
+              <a href="#" className="text-3xl font-serif font-bold text-white tracking-wide flex items-center gap-2 mb-6">
+                <Leaf className="w-7 h-7 text-pagi-green" />
+                LAUNDRY NIH BOSS
+              </a>
+              <p className="text-pagi-light/80 text-sm leading-relaxed mb-6">
+                Premium eco laundry dengan deterjen berbasis pohon. Lembut untuk kainmu, baik untuk bumi.
+              </p>
+              <div className="flex gap-4">
+                <a href="#" className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-pagi-green transition-colors">
+                  <Instagram className="w-5 h-5" />
+                </a>
+                <a href={generateWALink("Halo")} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-pagi-green transition-colors">
+                  <MessageCircle className="w-5 h-5" />
+                </a>
+              </div>
+            </div>
+
+            {/* Layanan */}
+            <div>
+              <h4 className="font-bold text-white mb-6 uppercase tracking-wider text-sm">Layanan</h4>
+              <ul className="space-y-4 text-pagi-light/80 text-sm">
+                <li><a href="#harga" className="hover:text-white transition-colors">Paket Reguler - Rp12.000/kg</a></li>
+                <li><a href="#harga" className="hover:text-white transition-colors">Paket Ekspres - Rp24.000/kg</a></li>
+                <li><a href="#harga" className="hover:text-white transition-colors">Satuan - Mulai Rp25.000/pcs</a></li>
+              </ul>
+            </div>
+
+            {/* Area */}
+            <div>
+              <h4 className="font-bold text-white mb-6 uppercase tracking-wider text-sm">Area Layanan</h4>
+              <ul className="space-y-4 text-pagi-light/80 text-sm">
+                <li>Rajawabanteng</li>
+                <li>Rajawabanteng</li>
+                <li>Rajawabanteng</li>
+                <li>Rajawabanteng</li>
+                <li>Rajawabanteng</li>
+              </ul>
+            </div>
+
+            {/* Kontak */}
+            <div>
+              <h4 className="font-bold text-white mb-6 uppercase tracking-wider text-sm">Kontak</h4>
+              <ul className="space-y-4 text-pagi-light/80 text-sm">
+                <li className="flex items-center gap-2">
+                  <MessageCircle className="w-4 h-4 text-pagi-green" />
+                  <a href={generateWALink(defaultWAMessage)} target="_blank" rel="noreferrer" className="hover:text-white transition-colors">
+                    +62 895-4108-09251
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+          </div>
+
+          <div className="pt-8 border-t border-white/10 text-center text-sm text-pagi-light/50">
+            <p>© TESSS TESSS.</p>
+          </div>
+        </div>
+      </footer>
+
+      <FloatingWhatsApp />
+    </div>
+  );
+};
+
+export default App;
+
+        const root = createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
